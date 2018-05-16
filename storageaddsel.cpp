@@ -147,7 +147,7 @@ int create_esel_association(const uint8_t *buffer, std::string& inventoryPath)
 
     sensor = p->sensornumber;
 
-    inventoryPath = {};
+    inventoryPath = "/xyz/openbmc_project/inventory/system/chassis/fru";
 
     /*
      * Search the sensor number to inventory path mapping to figure out the
