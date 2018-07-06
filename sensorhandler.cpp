@@ -855,6 +855,29 @@ ipmi_ret_t populate_record_from_dbus(get_sdr::SensorDataFullRecordBody *body,
     return IPMI_CC_OK;
 };
 
+/**
+ * @brief Returns the shortes path in fru instance vector
+ *
+ * @param[in] vec - fru instance vector
+ * @return - the shortest path
+ */
+const std::string& getInstancePath(const FruInstanceVec& vec)
+{
+    size_t index  = 0;
+    size_t minlen = vec[index].path.length();
+
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        size_t curlen = vec[i].path.length();
+        if (curlen < minlen)
+        {
+            minlen = curlen;
+            index = i;
+        }
+    }
+    return vec[index].path;
+}
+
 ipmi_ret_t ipmi_fru_get_sdr(ipmi_request_t request, ipmi_response_t response,
                             ipmi_data_len_t data_len)
 {
@@ -892,9 +915,9 @@ ipmi_ret_t ipmi_fru_get_sdr(ipmi_request_t request, ipmi_response_t response,
     record.body.deviceTypeModifier = IPMIFruInventory;
 
     /* Device ID string */
-    auto deviceID = fru->second[0].path.substr(
-            fru->second[0].path.find_last_of('/') + 1,
-            fru->second[0].path.length());
+    const std::string& path = getInstancePath(fru->second);
+    auto deviceID = path.substr(path.find_last_of('/') + 1,
+                                path.length());
 
 
     if (deviceID.length() > get_sdr::FRU_RECORD_DEVICE_ID_MAX_LENGTH)
