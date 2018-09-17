@@ -1079,6 +1079,72 @@ ipmi_ret_t ipmi_chassis_control(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
     return ( (rc < 0) ? IPMI_CC_INVALID : IPMI_CC_OK);
 }
 
+//----------------------------------------------------------------------
+// Chassis Set Power Restore Policy
+//----------------------------------------------------------------------
+ipmi_ret_t ipmi_set_power_restore_policy(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
+                                ipmi_request_t request,
+                                ipmi_response_t response,
+                                ipmi_data_len_t data_len,
+                                ipmi_context_t context)
+{
+    enum power_restore_policy {
+        POLICY_ALWAYS_OFF = 0x00,
+        POLICY_RESTORE    = 0x01,
+        POLICY_ALWAYS_ON  = 0x02,
+        POLICY_LIST       = 0x03,
+    };
+    const std::vector<std::string> values = {
+        "xyz.openbmc_project.Control.Power.RestorePolicy.Policy.AlwaysOff",
+        "xyz.openbmc_project.Control.Power.RestorePolicy.Policy.Restore",
+        "xyz.openbmc_project.Control.Power.RestorePolicy.Policy.AlwaysOn"
+    };
+    const uint8_t POLICY_MASK = 0x03;
+    constexpr auto busname = "xyz.openbmc_project.Settings";
+    constexpr auto objectpath = "/xyz/openbmc_project/control/host0/power_restore_policy";
+    constexpr auto ifacename = "xyz.openbmc_project.Control.Power.RestorePolicy";
+    constexpr auto propname = "PowerRestorePolicy";
+
+    auto bus = ipmid_get_sd_bus_connection();
+    const uint8_t policy = *(uint8_t *)request & POLICY_MASK;
+
+    if (policy < POLICY_LIST) {
+        sd_bus_error bus_error = SD_BUS_ERROR_NULL;
+        int rz = sd_bus_set_property(bus,
+            busname,
+            objectpath,
+            ifacename,
+            propname,
+            &bus_error,
+            "s",
+            values[policy].c_str());
+
+        if (rz < 0) {
+            sd_bus_error_free(&bus_error);
+            return IPMI_CC_UNSPECIFIED_ERROR;
+        }
+    } else {
+        // Supported chassis power policy bitfield:
+        //    always-off (0x01), previous (0x02), always-on (0x04)
+        uint8_t policy_support = 0x00;
+        using namespace sdbusplus::xyz::openbmc_project::Control::Power::server;
+        for (auto it = values.begin(); it != values.end(); ++it){
+            try
+            {
+                RestorePolicy::convertPolicyFromString(*it);
+                policy_support |= (1 << (it - values.begin()));
+            }
+            catch(const sdbusplus::exception::InvalidEnumString& e)
+            {
+                ;
+            }
+        }
+        *data_len = sizeof(policy_support);
+        memcpy(response, &policy_support, *data_len);
+    }
+    return IPMI_CC_OK;
+}
+
 /** @brief Return D-Bus connection string to enclosure identify LED object
  *
  *  @param[in, out] connection - connection to D-Bus object
@@ -1636,4 +1702,8 @@ void register_netfn_chassis_functions()
     // <Get POH Counter>
     ipmi_register_callback(NETFUN_CHASSIS, IPMI_CMD_GET_POH_COUNTER, NULL,
                            ipmiGetPOHCounter, PRIVILEGE_USER);
+
+    // <Set Power Restore Policy>
+    ipmi_register_callback(NETFUN_CHASSIS, IPMI_CMD_POWER_RESTORE_POLICY, NULL,
+                           ipmi_set_power_restore_policy, PRIVILEGE_OPERATOR);
 }
