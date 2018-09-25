@@ -198,11 +198,13 @@ GetSensorResponse readingData(const Info& sensorInfo)
             sensorInfo.propertyInterfaces.begin()->first,
             sensorInfo.propertyInterfaces.begin()->second.begin()->first);
 
-    double value = propValue.get<T>() * pow(10,
-            sensorInfo.scale - sensorInfo.exponentR);
+    double doubleValue = static_cast<double>(propValue.get<T>());
+    double scaledValue =
+            doubleValue * pow(10, sensorInfo.scale - sensorInfo.exponentR);
+    int32_t roundedValue = static_cast<int32_t>(round(scaledValue));
 
-    auto rawData = static_cast<uint8_t>(
-            (value - sensorInfo.scaledOffset) / sensorInfo.coefficientM);
+    auto rawData = static_cast<uint8_t>((roundedValue - sensorInfo.scaledOffset) /
+                                        sensorInfo.coefficientM);
 
     setReading(rawData, responseData);
 
