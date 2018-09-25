@@ -70,7 +70,7 @@ extern const IdInfoMap sensors = {
 %>
         ${entityID},${instance},${sensorType},"${path}","${sensorInterface}",
         ${readingType},${multiplier},${offsetB},${bExp},
-        ${offsetB * int(pow(10,bExp))}, ${rExp}, ${hasScale},${scale},"${unit}",
+        ${offsetB * pow(10,bExp)}, ${rExp}, ${hasScale},${scale},"${unit}",
         ${updateFunc},${getFunc},Mutability(${mutability}),${sensorNameFunc},{
     % for interface,properties in interfaces.items():
             {"${interface}",{
