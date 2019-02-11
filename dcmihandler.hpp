@@ -58,7 +58,8 @@ static constexpr auto systemIntf = "org.freedesktop.systemd1.Manager";
 static constexpr auto gDCMICapabilitiesConfig = "/usr/share/ipmi-providers/dcmi_cap.json";
 static constexpr auto gDCMIPowerMgmtCapability = "PowerManagement";
 static constexpr auto gDCMIPowerMgmtSupported = 0x1;
-
+static constexpr auto gMaxSELEntriesMask = 0xFFF;
+static constexpr auto gByteBitSize = 8;
 
 namespace assettag
 {
