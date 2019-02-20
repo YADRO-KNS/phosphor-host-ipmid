@@ -68,7 +68,7 @@ class SoftPowerOff : public sdbusplus::server::object::object<
         /** @brief Tells if the referenced timer is expired or not */
         inline auto isTimerExpired()
         {
-            return timer.isExpired();
+            return timer.isExpired() && timer.isStarted();
         }
 
         /** @brief overloaded property setter function

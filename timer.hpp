@@ -48,6 +48,11 @@ class Timer
             return expired;
         }
 
+        inline auto isStarted() const
+        {
+            return started;
+        }
+
         /** @brief Starts the timer with specified expiration value.
          *  input is an offset from the current steady_clock
          */
@@ -68,6 +73,12 @@ class Timer
          *  This is set to true when the timeoutHandler is called into
          */
         bool expired = true;
+
+        /** @brief Returns if the associated timer is started
+         *
+         *  This is set to true when the startTimer is called into
+         */
+        bool started = false;
 
         /** @brief Initializes the timer object with infinite
          *         expiration time and sets up the callback handler

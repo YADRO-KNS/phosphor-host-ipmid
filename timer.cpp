@@ -17,6 +17,8 @@ void Timer::initialize()
         throw std::runtime_error("Timer already initialized");
     }
 
+    started = false;
+
     // Add infinite expiration time
     auto r = sd_event_add_time(timeEvent, &eventSource,
                                CLOCK_MONOTONIC, // Time base
@@ -102,6 +104,10 @@ int Timer::startTimer(std::chrono::microseconds timeValue)
     {
         log<level::ERR>("Failure to start timer",
                 entry("ERROR=%s", strerror(-r)));
+    }
+    else
+    {
+        started = true;
     }
     return r;
 }
