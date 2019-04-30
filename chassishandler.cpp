@@ -1621,6 +1621,7 @@ ipmi_ret_t ipmi_chassis_get_sys_boot_options(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         // 5. Get 'Data' vector from Control.Boot.Mailbox
         // 6. Return the selected block (16 bytes) from the vector
 
+        log<level::INFO>("Get Boot Mailbox command received");
         BootMboxBlock *rspMboxData = reinterpret_cast<BootMboxBlock *>(resp->data);
 
         *data_len = 0; // Assume an error and no data
@@ -1629,6 +1630,7 @@ ipmi_ret_t ipmi_chassis_get_sys_boot_options(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
             BootOptionParameter::BOOT_INITIATOR_MBOX);
 
         try {
+            log<level::INFO>("Checking Get Boot Mailbox support");
             // Check whether this option is supported
             rc = IPMI_CC_INVALID; // Assume unsupported
             if (!isBootMboxSupported(rc))
@@ -1638,6 +1640,7 @@ ipmi_ret_t ipmi_chassis_get_sys_boot_options(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
             }
             rc = IPMI_CC_OK;
 
+            log<level::INFO>("Get Boot Mailbox is supported");
             // Requested block
             IpmiValue reqBlock = reqptr->set; // Use "set selector"
 
@@ -1649,6 +1652,11 @@ ipmi_ret_t ipmi_chassis_get_sys_boot_options(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
             size_t dataVecStartOffset = reqBlock * blockDataSize
                 - sizeof(rspMboxData->ipmiIANAEnterprise);
 
+            log<level::INFO>("Get Boot Mailbox initial parameters",
+                             entry("REQUESTED_BLOCK", reqBlock),
+                             entry("BLOCK_DATA_SIZE", blockDataSize),
+                             entry("DATAVEC_START", dataVecStartOffset)
+                             );
             // Adjust pointers and sizes for block 0, and fill in the IANA PEN
             if (0 == reqBlock) {
                 uint32_t IANAEnterprise = getBootMboxIANA(rc);
@@ -1666,6 +1674,11 @@ ipmi_ret_t ipmi_chassis_get_sys_boot_options(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
                 blockDataSize = sizeof(rspMboxData->blockZeroData);
                 dataVecStartOffset = 0;
             }
+            log<level::INFO>("Get Boot Mailbox adjusted parameters",
+                             entry("REQUESTED_BLOCK", reqBlock),
+                             entry("BLOCK_DATA_SIZE", blockDataSize),
+                             entry("DATAVEC_START", dataVecStartOffset)
+                             );
 
             // Get the total data size
             uint32_t dataVecSize = getBootMboxSize(rc);
